@@ -2,22 +2,41 @@
 <html>
 
 <head>
-    <title>Code scanner</title>
+    <title>QR Code Scanner</title>
     <style>
-        .container {
+        body {
+            background-color: #f4f4f4;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
-            flex-direction: column;
-            align-items: center;
             justify-content: center;
+            align-items: center;
             height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            position: fixed;
+            text-align: center;
+            background-color: #f4f4f4;
+            z-index: 9999;
+        }
+
+        .question {
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 20px;
         }
 
         #numberBox {
-            width: 200px;
-            height: 30px;
+            width: 310px;
+            height: 40px;
             text-align: center;
-            font-size: 20px;
-            margin-bottom: 10px;
+            font-size: 24px;
+            margin-bottom: 20px;
+            border: 2px solid #ccc;
+            border-radius: 5px;
+            background-color: #fff;
+            outline: none;
         }
 
         .buttons {
@@ -28,14 +47,20 @@
 
         .button {
             width: 60px;
-            height: 40px;
-            background-color: #e0e0e0;
-            border-radius: 5px;
+            height: 60px;
+            background-color: #f0f0f0;
+            border: 2px solid #ccc;
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
+            font-size: 24px;
             cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .button:hover {
+            background-color: #e0e0e0;
         }
 
         #backspaceButton {
@@ -43,153 +68,188 @@
         }
 
         #transactionButton {
-            width: 120px;
-            height: 40px;
+            width: 200px;
+            height: 50px;
             background-color: #4caf50;
             color: white;
             border: none;
             border-radius: 5px;
-            font-size: 18px;
+            font-size: 24px;
             cursor: pointer;
+            margin-top: 40px;
+            transition: background-color 0.3s ease;
         }
 
-        #receiveButton {
-            width: 120px;
-            height: 40px;
-            background-color: #4caf50;
-            color: white;
+        #transactionButton:hover {
+            background-color: #43a047;
+        }
+
+        .btns {
+            display: inline-block;
+            padding: 10px 20px;
+            font-size: 16px;
+            text-align: center;
+            text-decoration: none;
+            outline: none;
+            color: #fff;
+            background-color: #4CAF50;
             border: none;
-            border-radius: 5px;
-            font-size: 18px;
-            cursor: pointer;
+            border-radius: 15px;
+            box-shadow: 0 5px #357a38;
         }
 
-        #resultBox {
-            margin-top: 20px;
-            display: none;
+        .btns:hover {
+            background-color: #45a049
         }
 
-        #resultBox p {
-            font-size: 18px;
+        .btns:active {
+            background-color: #3e8e41;
+            box-shadow: 0 5px #357a38;
+            transform: translateY(4px);
+        }
+
+        .start {
+            text-align: center;
+            margin-top: center;
+            margin-left: center;
         }
     </style>
     <script src="https://rawgit.com/schmich/instascan-builds/master/instascan.min.js"></script>
 </head>
 
 <body>
-    <!-- Initial buttons to trigger actions -->
-    <div class="container">
-        <button id="receiveBalanceButton" onclick="showReceiveBalance()">Receive Balance</button>
-        <button id="makeTransactionButton" onclick="startTransaction()">Make Transaction</button>
+    <div class="start">
+        <button id="btn1" class="btns" onclick="balance()">دریافت موجودی</button>
+        <button id="btn2" class="btns" onclick="startTransaction()">تراکنش</button>
     </div>
-
-    <!-- Receive Balance Step -->
-    <div id="receiveBalanceStep" style="display: none;">
-        <div class="container">
-            <!-- Display card number and password input boxes -->
-            <div>Card Number: <input type="text" id="cardNumberInput" /></div>
-            <div>Password: <input type="password" id="passwordInput" /></div>
-            <button id="checkPasswordButton" onclick="checkPassword()">Check Password</button>
+    <div class="container" style="display: none;">
+        <div class="question">Enter the transaction amount:</div>
+        <div id="numberBox"></div>
+        <div class="buttons">
+            <div class="button" onclick="addNumber(1)">1</div>
+            <div class="button" onclick="addNumber(2)">2</div>
+            <div class="button" onclick="addNumber(3)">3</div>
+            <div class="button" onclick="addNumber(4)">4</div>
+            <div class="button" onclick="addNumber(5)">5</div>
+            <div class="button" onclick="addNumber(6)">6</div>
+            <div class="button" onclick="addNumber(7)">7</div>
+            <div class="button" onclick="addNumber(8)">8</div>
+            <div class="button" onclick="addNumber(9)">9</div>
+            <div id="backspaceButton" class="button" onclick="backspace()">⌫</div>
         </div>
+        <button id="transactionButton" onclick="startTransaction()">Start Transaction</button>
     </div>
-
-    <!-- Transaction Result -->
-    <div id="resultBox" style="display: none;">
-        <p id="transactionResult"></p>
-    </div>
-
-    <!-- Video preview for scanning QR code -->
     <video id="preview" style="display: none;"></video>
 
     <script>
         let cards = [
-            { card: 12345678, code: 1234, name: 'mohamad', value: 2000 },
-            { card: 23457681, code: 5661, name: 'sobhan', value: 11000 }
-        ];
-        let enteredCode = '';
+            { card: 12345678, code: 1234, value: 2000 },
+            { card: 23457681, code: 5661, value: 11000 }
+        ]
         let scanner;
+        let enteredCode = '';
+        let code;
+        let transactionStarted = false;
+        let max = 4;
 
-        function showReceiveBalance() {
-            // Hide initial buttons
-            document.getElementById('receiveBalanceButton').style.display = 'none';
-            document.getElementById('makeTransactionButton').style.display = 'none';
-            // Show receive balance step
-            document.getElementById('receiveBalanceStep').style.display = 'block';
+        function show(question, text, len) {
+            max = len;
+            document.querySelector('.container').style.display = 'block';
+            document.querySelector('.question').innerText = question;
+            document.getElementById('transactionButton').innerText = text;
+
+            const numberBox = document.getElementById('numberBox');
+
+            document.getElementById('transactionButton').addEventListener('click', function () {
+                return enteredCode;
+                enteredCode = '';
+                updateNumberBox();
+            });
+        }
+        function hide() {
+            document.querySelector('.container').style.display = 'none';
         }
 
-        function checkPassword() {
-            // Get input values
-            const cardNumber = parseInt(document.getElementById('cardNumberInput').value);
-            const password = parseInt(document.getElementById('passwordInput').value);
+        function addNumber(number) {
+            if (enteredCode.length < max) {
+                enteredCode += number;
+                updateNumberBox();
+            }
+        }
 
-            // Find the card in the array
-            const card = cards.find(c => c.card === cardNumber && c.code === password);
+        function backspace() {
+            enteredCode = enteredCode.slice(0, -1);
+            updateNumberBox();
+        }
 
-            if (card) {
-                // Hide receive balance step
-                document.getElementById('receiveBalanceStep').style.display = 'none';
-                // Show video preview for scanning QR code
-                document.getElementById('preview').style.display = 'block;
+        function updateNumberBox() {
+            const numberBox = document.getElementById('numberBox');
+            numberBox.innerHTML = enteredCode;
+        }
 
-                // Start QR code scanner
+        function startTransaction() {
+            let cardnum;
+            document.querySelector('.start').style.display = 'none';
+            transactionStarted = true;
+            hide()
+            let numc = show('لطفا شماره کارت خود را وارد کنید', 'بعدی', 8)
+            if (numc || cardnum !== null) {
+                cardnum = parseInt(numc);
+
+                document.getElementById('preview').style.display = 'block';
+
                 scanner = new Instascan.Scanner({ video: document.getElementById('preview'), mirror: false });
+            }
 
-                // Add listener for scanned content
-                scanner.addListener('scan', function (content) {
-                    // Handle transaction logic
-                    handleTransaction(card, content);
-                });
-
-                // Start camera
-                Instascan.Camera.getCameras().then(function (cameras) {
-                    if (cameras.length > 0) {
-                        scanner.start(cameras[0]); // Use the first camera
-                    } else {
-                        console.error('No cameras found.');
+            scanner.addListener('scan', function (content) {
+                let ramz = show('لطفا رمز کارت را وارد نمایید', 'بعدی', 4)
+                if (ramz) {
+                    if (content === ramz) {
+                        transactionStarted = false;
+                        scanner.stop();
+                        document.getElementById('preview').style.display = 'none';
+                        let money = show('لطفا مبلغ مدنظر خود را وارد کنید', 'کارت به کارت', 15)
+                        if (money) {
+                            for (let i in cards) {
+                                if (cards[i].code == parseInt(ramz)) {
+                                    cards[i].value -= parseInt(money)
+                                    for (let l in cards) {
+                                        if (cards[l].card == cardnum) {
+                                            cards[l].value += parseInt(money)
+                                        }
+                                    }
+                                }
+                            }
+                            alert('تراکنش موفق')
+                            startTransaction()
+                        }
                     }
-                }).catch(function (e) {
-                    console.error(e);
-                });
-            } else {
-                alert('Invalid card number or password. Please try again.');
-            }
+                }
+            });
+
+            Instascan.Camera.getCameras().then(function (cameras) {
+                if (cameras.length > 0) {
+                    scanner.start(cameras[cameras.length - 1]);
+                } else {
+                    console.error('No cameras found.');
+                }
+            }).catch(function (e) {
+                console.error(e);
+            });
         }
 
-        function handleTransaction(senderCard, recipientCardCode) {
-            // Find the recipient's card
-            const recipientCard = cards.find(c => c.code == recipientCardCode);
-
-            if (recipientCard) {
-                // Subtract the transaction amount from sender's card value
-                senderCard.value -= enteredCode;
-                // Add the transaction amount to the recipient's card value
-                recipientCard.value += enteredCode;
-                // Display the transaction result
-                document.getElementById('transactionResult').innerText = `Transaction Successful!\n\nFrom: ${senderCard.name}\nAmount: ${enteredCode}\nTo: ${recipientCard.name}`;
-                // Reset the entered values after 3 seconds
-                setTimeout(resetValues, 3000);
-            } else {
-                alert('Recipient card not found.');
+        function balance() {
+            document.querySelector('.start').style.display = 'none';
+            let remz = show('لطفا رمز خود را وارد کنید', 'دریافت', 4);
+            if (remz) {
+                for (let i in cards) {
+                    if (cards[i].code == parseInt(remz)) {
+                        alert(cards[i].value)
+                    }
+                }
             }
-
-            // Stop the scanner and display the result
-            scanner.stop();
-            document.querySelector('.container').style.display = 'flex';
-            document.getElementById('preview').style.display = 'none';
-            document.getElementById('resultBox').style.display = 'block';
-        }
-
-        function resetValues() {
-            document.getElementById('transactionResult').innerText = '';
-            document.getElementById('resultBox').style.display = 'none';
-            // Clear input values
-            document.getElementById('cardNumberInput').value = '';
-            document.getElementById('passwordInput').value = '';
-            // Restart the scanner
-            scanner.start();
         }
     </script>
-    <script src="https://rawgit.com/schmich/instascan-builds/master/instascan.min.js"></script>
 </body>
 
 </html>
