@@ -1,255 +1,140 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
-
 <head>
-    <title>QR Code Scanner</title>
-    <style>
-        body {
-            background-color: #f4f4f4;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
+    <meta charset="UTF-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+	<title>New project</title>
+	
+	<!-- Standardised web app manifest -->
+	<link rel="manifest" href="appmanifest.json" />
+	
+	<!-- Allow fullscreen mode on iOS devices. (These are Apple specific meta tags.) -->
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, minimal-ui" />
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+	<link rel="apple-touch-icon" sizes="256x256" href="icon-256.png" />
+	<meta name="HandheldFriendly" content="true" />
+	
+	<!-- Chrome for Android web app tags -->
+	<meta name="mobile-web-app-capable" content="yes" />
+	<link rel="shortcut icon" sizes="256x256" href="icon-256.png" />
 
-        .container {
-            position: fixed;
-            text-align: center;
-            background-color: #f4f4f4;
-            z-index: 9999;
-        }
-
-        .question {
-            font-size: 28px;
-            color: #333;
-            margin-bottom: 20px;
-        }
-
-        #numberBox {
-            width: 310px;
-            height: 40px;
-            text-align: center;
-            font-size: 24px;
-            margin-bottom: 20px;
-            border: 2px solid #ccc;
-            border-radius: 5px;
-            background-color: #fff;
-            outline: none;
-        }
-
-        .buttons {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-        }
-
-        .button {
-            width: 60px;
-            height: 60px;
-            background-color: #f0f0f0;
-            border: 2px solid #ccc;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        .button:hover {
-            background-color: #e0e0e0;
-        }
-
-        #backspaceButton {
-            background-color: #ffcccc;
-        }
-
-        #transactionButton {
-            width: 200px;
-            height: 50px;
-            background-color: #4caf50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-size: 24px;
-            cursor: pointer;
-            margin-top: 40px;
-            transition: background-color 0.3s ease;
-        }
-
-        #transactionButton:hover {
-            background-color: #43a047;
-        }
-
-        .btns {
-            display: inline-block;
-            padding: 10px 20px;
-            font-size: 16px;
-            text-align: center;
-            text-decoration: none;
-            outline: none;
-            color: #fff;
-            background-color: #4CAF50;
-            border: none;
-            border-radius: 15px;
-            box-shadow: 0 5px #357a38;
-        }
-
-        .btns:hover {
-            background-color: #45a049
-        }
-
-        .btns:active {
-            background-color: #3e8e41;
-            box-shadow: 0 5px #357a38;
-            transform: translateY(4px);
-        }
-
-        .start {
-            text-align: center;
-            margin-top: center;
-            margin-left: center;
-        }
+    <!-- All margins and padding must be zero for the canvas to fill the screen. -->
+	<style type="text/css">
+		* {
+			padding: 0;
+			margin: 0;
+		}
+		html, body {
+			background: #000;
+			color: #fff;
+			overflow: hidden;
+			touch-action: none;
+			-ms-touch-action: none;
+		}
+		canvas {
+			touch-action-delay: none;
+			touch-action: none;
+			-ms-touch-action: none;
+		}
     </style>
-    <script src="https://rawgit.com/schmich/instascan-builds/master/instascan.min.js"></script>
-</head>
+	
 
-<body>
-    <div class="start">
-        <button id="btn1" class="btns" onclick="balance()">دریافت موجودی</button>
-        <button id="btn2" class="btns" onclick="startTransaction()">تراکنش</button>
-    </div>
-    <div class="container" style="display: none;">
-        <div class="question">Enter the transaction amount:</div>
-        <div id="numberBox"></div>
-        <div class="buttons">
-            <div class="button" onclick="addNumber(1)">1</div>
-            <div class="button" onclick="addNumber(2)">2</div>
-            <div class="button" onclick="addNumber(3)">3</div>
-            <div class="button" onclick="addNumber(4)">4</div>
-            <div class="button" onclick="addNumber(5)">5</div>
-            <div class="button" onclick="addNumber(6)">6</div>
-            <div class="button" onclick="addNumber(7)">7</div>
-            <div class="button" onclick="addNumber(8)">8</div>
-            <div class="button" onclick="addNumber(9)">9</div>
-            <div id="backspaceButton" class="button" onclick="backspace()">⌫</div>
-        </div>
-        <button id="transactionButton" onclick="startTransaction()">Start Transaction</button>
-    </div>
-    <video id="preview" style="display: none;"></video>
+</head> 
+ 
+<body> 
+	<div id="fb-root"></div>
+	
+	<script>
+	// Issue a warning if trying to preview an exported project on disk.
+	(function(){
+		// Check for running exported on file protocol
+		if (window.location.protocol.substr(0, 4) === "file")
+		{
+			alert("Exported games won't work until you upload them. (When running on the file:/// protocol, browsers block many features from working for security reasons.)");
+		}
+	})();
+	</script>
+	
+	<!-- The canvas must be inside a div called c2canvasdiv -->
+	<div id="c2canvasdiv">
+	
+		<!-- The canvas the project will render to.  If you change its ID, don't forget to change the
+		ID the runtime looks for in the jQuery events above (ready() and cr_sizeCanvas()). -->
+		<canvas id="c2canvas" width="854" height="480">
+			<!-- This text is displayed if the visitor's browser does not support HTML5.
+			You can change it, but it is a good idea to link to a description of a browser
+			and provide some links to download some popular HTML5-compatible browsers. -->
+			<h1>Your browser does not appear to support HTML5.  Try upgrading your browser to the latest version.  <a href="http://www.whatbrowser.org">What is a browser?</a>
+			<br/><br/><a href="http://www.microsoft.com/windows/internet-explorer/default.aspx">Microsoft Internet Explorer</a><br/>
+			<a href="http://www.mozilla.com/firefox/">Mozilla Firefox</a><br/>
+			<a href="http://www.google.com/chrome/">Google Chrome</a><br/>
+			<a href="http://www.apple.com/safari/download/">Apple Safari</a></h1>
+		</canvas>
+		
+	</div>
+	
+	<!-- Pages load faster with scripts at the bottom -->
+	
+	<!-- Construct 2 exported games require jQuery. -->
+	<script src="jquery-3.4.1.min.js"></script>
+
+	<script src="c2mp-net.js"></script>
+	<script src="c2mp-peer.js"></script>
+	<script src="c2mp.js"></script>
+	<script src="waker.js"></script>
+
+	
+    <!-- The runtime script.  You can rename it, but don't forget to rename the reference here as well.
+    This file will have been minified and obfuscated if you enabled "Minify script" during export. -->
+	<script src="c2runtime.js"></script>
 
     <script>
-        let cards = [
-            { card: 12345678, code: 1234, value: 2000 },
-            { card: 23457681, code: 5661, value: 11000 }
-        ]
-        let scanner;
-        let enteredCode = '';
-        let code;
-        let transactionStarted = false;
-        let max = 4;
-
-        function show(question, text, len) {
-            max = len;
-            document.querySelector('.container').style.display = 'block';
-            document.querySelector('.question').innerText = question;
-            document.getElementById('transactionButton').innerText = text;
-
-            const numberBox = document.getElementById('numberBox');
-
-            document.getElementById('transactionButton').addEventListener('click', function () {
-                return enteredCode;
-                enteredCode = '';
-                updateNumberBox();
-            });
-        }
-        function hide() {
-            document.querySelector('.container').style.display = 'none';
-        }
-
-        function addNumber(number) {
-            if (enteredCode.length < max) {
-                enteredCode += number;
-                updateNumberBox();
-            }
-        }
-
-        function backspace() {
-            enteredCode = enteredCode.slice(0, -1);
-            updateNumberBox();
-        }
-
-        function updateNumberBox() {
-            const numberBox = document.getElementById('numberBox');
-            numberBox.innerHTML = enteredCode;
-        }
-
-        function startTransaction() {
-            let cardnum;
-            document.querySelector('.start').style.display = 'none';
-            transactionStarted = true;
-            hide()
-            let numc = show('لطفا شماره کارت خود را وارد کنید', 'بعدی', 8)
-            if (numc || cardnum !== null) {
-                cardnum = parseInt(numc);
-
-                document.getElementById('preview').style.display = 'block';
-
-                scanner = new Instascan.Scanner({ video: document.getElementById('preview'), mirror: false });
-            }
-
-            scanner.addListener('scan', function (content) {
-                let ramz = show('لطفا رمز کارت را وارد نمایید', 'بعدی', 4)
-                if (ramz) {
-                    if (content === ramz) {
-                        transactionStarted = false;
-                        scanner.stop();
-                        document.getElementById('preview').style.display = 'none';
-                        let money = show('لطفا مبلغ مدنظر خود را وارد کنید', 'کارت به کارت', 15)
-                        if (money) {
-                            for (let i in cards) {
-                                if (cards[i].code == parseInt(ramz)) {
-                                    cards[i].value -= parseInt(money)
-                                    for (let l in cards) {
-                                        if (cards[l].card == cardnum) {
-                                            cards[l].value += parseInt(money)
-                                        }
-                                    }
-                                }
-                            }
-                            alert('تراکنش موفق')
-                            startTransaction()
-                        }
-                    }
-                }
-            });
-
-            Instascan.Camera.getCameras().then(function (cameras) {
-                if (cameras.length > 0) {
-                    scanner.start(cameras[cameras.length - 1]);
-                } else {
-                    console.error('No cameras found.');
-                }
-            }).catch(function (e) {
-                console.error(e);
-            });
-        }
-
-        function balance() {
-            document.querySelector('.start').style.display = 'none';
-            let remz = show('لطفا رمز خود را وارد کنید', 'دریافت', 4);
-            if (remz) {
-                for (let i in cards) {
-                    if (cards[i].code == parseInt(remz)) {
-                        alert(cards[i].value)
-                    }
-                }
-            }
-        }
+		// Start the Construct 2 project running on window load.
+		jQuery(document).ready(function ()
+		{			
+			// Create new runtime using the c2canvas
+			cr_createRuntime("c2canvas");
+		});
+		
+		// Pause and resume on page becoming visible/invisible
+		function onVisibilityChanged() {
+			if (document.hidden || document.mozHidden || document.webkitHidden || document.msHidden)
+				cr_setSuspended(true);
+			else
+				cr_setSuspended(false);
+		};
+		
+		document.addEventListener("visibilitychange", onVisibilityChanged, false);
+		document.addEventListener("mozvisibilitychange", onVisibilityChanged, false);
+		document.addEventListener("webkitvisibilitychange", onVisibilityChanged, false);
+		document.addEventListener("msvisibilitychange", onVisibilityChanged, false);
+		
+		function OnRegisterSWError(e)
+		{
+			console.warn("Failed to register service worker: ", e);
+		};
+		
+		// Runtime calls this global method when ready to start caching (i.e. after startup).
+		// This registers the service worker which caches resources for offline support.
+		window.C2_RegisterSW = function C2_RegisterSW()
+		{
+			if (!navigator.serviceWorker)
+				return;		// no SW support, ignore call
+			
+			try {
+				navigator.serviceWorker.register("sw.js", { scope: "./" })
+				.then(function (reg)
+				{
+					console.log("Registered service worker on " + reg.scope);
+				})
+				.catch(OnRegisterSWError);
+			}
+			catch (e)
+			{
+				OnRegisterSWError(e);
+			}
+		};
     </script>
-</body>
-
-</html>
+</body> 
+</html> 
