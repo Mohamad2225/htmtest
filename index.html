@@ -1,48 +1,27 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>QR Code Scanner</title>
+    <title>QR Code Scanner</title>
+    <script src="https://rawgit.com/schmich/instascan-builds/master/instascan.min.js"></script>
 </head>
 <body>
-  <h1>QR Code Scanner5</h1>
-  <video id="qr-video" width="300" height="300" autoplay></video>
-  <button id="switch-camera-btn">Switch Camera</button>
-  <script src="https://rawgit.com/schmich/instascan-builds/master/instascan.min.js"></script>
-  <script>
-    const video = document.getElementById('qr-video');
-    let frontCamera = true; // flag to track currently active camera
+    <video id="preview" style="width:100%; max-width:480px;"></video>
+    <script>
+        let scanner = new Instascan.Scanner({ video: document.getElementById('preview'), mirror: false });
 
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-      .then(function(stream) {
-        video.srcObject = stream;
-        video.play();
-      })
-      .catch(function(err) {
-        console.log("An error occurred: " + err);
-      });
-
-    let scanner = new Instascan.Scanner({ video: video });
-    scanner.addListener('scan', function(content) {
-      alert('Found QR code: ' + content);
-    });
-
-    Instascan.Camera.getCameras().then(function(cameras) {
-      if (cameras.length > 1) {
-        // If there are multiple cameras, show the switch camera button
-        const switchCameraBtn = document.getElementById('switch-camera-btn');
-        switchCameraBtn.style.display = 'block';
-
-        switchCameraBtn.addEventListener('click', function() {
-          frontCamera = !frontCamera; // toggle the flag
-          scanner.start(cameras[frontCamera ? 1 : 0]); // start the selected camera
+        scanner.addListener('scan', function (content) {
+            alert('QR code scanned: ' + content);
         });
-      }
-      scanner.start(cameras[0]); // Start with the default camera
-    }).catch(function(e) {
-      console.error(e);
-    });
-  </script>
+
+        Instascan.Camera.getCameras().then(function (cameras) {
+            if (cameras.length > 0) {
+                scanner.start(cameras[cameras.length - 1]);
+            } else {
+                console.error('No cameras found.');
+            }
+        }).catch(function (e) {
+            console.error(e);
+        });
+    </script>
 </body>
 </html>
