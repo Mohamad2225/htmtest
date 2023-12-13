@@ -8,10 +8,13 @@
 <body>
   <h1>QR Code Scanner3</h1>
   <video id="qr-video" width="300" height="300" autoplay></video>
+  <button id="switch-camera-btn">Switch Camera</button>
   <script src="https://rawgit.com/schmich/instascan-builds/master/instascan.min.js"></script>
   <script>
     const video = document.getElementById('qr-video');
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
+    let frontCamera = true; // flag to track currently active camera
+
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
       .then(function(stream) {
         video.srcObject = stream;
         video.play();
@@ -19,21 +22,24 @@
       .catch(function(err) {
         console.log("An error occurred: " + err);
       });
+
     let scanner = new Instascan.Scanner({ video: video });
     scanner.addListener('scan', function(content) {
       alert('Found QR code: ' + content);
     });
+
     Instascan.Camera.getCameras().then(function(cameras) {
-      let frontCamera = cameras.find(function(camera) {
-        return camera.name.toLowerCase().includes('front');
-      });
-      if (frontCamera) {
-        scanner.start(frontCamera);
-      } else if (cameras.length > 0) {
-        scanner.start(cameras[0]);
-      } else {
-        console.error('No cameras found.');
+      if (cameras.length > 1) {
+        // If there are multiple cameras, show the switch camera button
+        const switchCameraBtn = document.getElementById('switch-camera-btn');
+        switchCameraBtn.style.display = 'block';
+
+        switchCameraBtn.addEventListener('click', function() {
+          frontCamera = !frontCamera; // toggle the flag
+          scanner.start(cameras[frontCamera ? 1 : 0]); // start the selected camera
+        });
       }
+      scanner.start(cameras[0]); // Start with the default camera
     }).catch(function(e) {
       console.error(e);
     });
